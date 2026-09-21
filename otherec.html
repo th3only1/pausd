@@ -1,1 +1,111 @@
-<a href="inp.html">Click Here for Redirect...</a>
+<!DOCTYPE html>
+<html>
+<style>
+    h1 {
+    text-align: center;
+    font-family: monospace;
+    font-variant: small-caps;
+    }
+    ul, h2, h3 {
+    font-family: monospace;
+    }
+    .btn {
+    padding: 12.5px 25px;
+    font-size: 16px;
+    font-weight: 600;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50px;
+    cursor: pointer;
+    transition: transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+    display: inline-block;
+    text-decoration: none;
+    background-color: #27272A;
+    margin: 6px; 
+    }
+    .btn:hover {
+    transform: scale(1.08);
+    background-color: #3F3F46;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+    .btn:active {
+    transform: scale(0.95);
+    }
+    body {
+    padding-top: 10vh;
+    background-color: #09090B;
+    }
+    * {
+        color:#F4F4F5;
+    }
+</style>
+
+<head>
+    <title>My Apps</title>
+    <link rel="icon" type="image/jpeg" href="https://pbs.twimg.com/profile_images/1179529603624226818/oGF_v7IC.jpg">
+</head>
+
+<body>
+    <h2><b>Warning!</b></h2>
+    <h3>These clients are <strong>NOT</strong> hidden as Classlink tabs, nor can they be launched into an <code>about:blank</code> tab.</h3>
+    <h2>Our Games:</h2>
+    <div style="margin-bottom: 20px;">
+        <input type="text" id="findGame" oninput="search()" placeholder="Search..." style="color: #0B0B0A;" font-family:monospace; padding:8px; width: 250px; max-width: 80%;">
+    </div>
+    
+    <a href="https://th3only1.github.io/pausd.classlink" class="btn">Click me to <b>REDIRECT</b></a>
+
+</body>
+
+<dialog id="proxyDialog" style="padding:20px; border-radius:8px; border:1px solid #ccc; text-align:center;">
+    <p style="margin-top:0; color:#0B0B0A;">How would you like to open this game?</p>
+    <button id="btnProxy" style="color: #0B0B0A;">Launch 2.0</button>
+    <button id="btnNormal" style="color: #0B0B0A;">Launch Normally</button>
+    <button id="btnCancel" style="display:block; margin:15px auto 0 auto; color: #ff4d4d;">Nevermind</button>
+</dialog>
+
+<script>
+    let activeUrl = '';
+    const dialog = document.getElementById('proxyDialog');
+    
+    document.querySelectorAll('body > .btn').forEach(link => {
+        link.addEventListener('click', function(event) {
+            event.preventDefault();
+            activeUrl = this.getAttribute('href');
+            dialog.showModal();
+        });
+    });
+    
+    document.getElementById('btnProxy').addEventListener('click', () => {
+        dialog.close();
+        const blankWindow = window.open('about:blank', '_blank');
+        if (blankWindow) {
+            const doc = blankWindow.document;
+            doc.body.style.margin = '0';
+            doc.body.style.overflow = 'hidden';
+            const iframe = doc.createElement('iframe');
+            iframe.src = activeUrl;
+            iframe.style.width = '100vw';
+            iframe.style.height = '100vh';
+            iframe.style.border = 'none';
+            doc.body.appendChild(iframe);
+        }
+    });
+    
+    document.getElementById('btnNormal').addEventListener('click', () => {
+        dialog.close();
+        window.open(activeUrl, '_blank');
+    });
+    
+    document.getElementById('btnCancel').addEventListener('click', () => {
+        dialog.close();
+    });
+    
+    function search() {
+        let query = document.getElementById('findGame').value.toLowerCase();
+        document.querySelectorAll('body > .btn').forEach(b => {
+            b.style.display = b.textContent.toLowerCase().includes(query) ? '' : 'none';
+        });
+    }
+</script>
+</html>
