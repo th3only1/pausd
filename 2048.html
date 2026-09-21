@@ -1,199 +1,475 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+  />
     <title>My Apps</title>
-    <link rel="icon" type="image/x-icon" href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR-1zeTr7umcRr1dnuBASn_bMdIriD-0Ofmruatuu6ew-ks5dbp3iVof_8&s=10">
-<style>
-body {
-    background-color: #faf8ef;
-    font-family: 'Clear Sans', sans-serif;
-    margin: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    overflow: hidden;
-}
-#main-screen, #game-screen {
-    position: absolute;
-    width: 340px;
-    text-align: center;
-}
-#game-screen {
-    display: none;
-}
+    <link rel="icon" type="image/x-icon" href="https://pbs.twimg.com/profile_images/1179529603624226818/oGF_v7IC.jpg">
 
-.btn {
-    background: #8f7a66;
-    color: white;
-    border: none;
-    padding: 15px 30px;
-    font-size: 20px;
-    border-radius: 5px;
-    cursor: pointer;
-    margin: 10px 10px 5px;
-    font-weight: bold;
-}
-.instruction-text {
-    color: #776e65;
-    font-size: 14px;
-    font-weight: bold;
-    margin-bottom: 20px;
-}
-.volume-box {
-    margin: 25px;
-    color: #776e65;
-    font-weight: bold;
-}
-input[type=range] {
-    width: 150px;
-    cursor: pointer;
-    accent-color: #8f7a66;
-}
-#score {
-    background: #bbada0;
-    color: white;
-    padding: 10px 20px;
-    border-radius: 5px;
-    margin-bottom: 10px;
-    display: inline-block;
-    font-weight: bold;
-}
+  <style>
+    :root {
+      --board-size: min(92vw, 500px);
+      --gap: clamp(7px, 2vw, 14px);
+      --radius: clamp(7px, 2vw, 12px);
+      --text: #776e65;
+      --board: #bbada0;
+      --empty: rgba(238, 228, 218, 0.35);
+    }
 
-#game-container {
-    position: relative;
-    width: 320px;
-    height: 320px;
-    background: #bbada0;
-    border-radius: 6px;
-    padding: 10px;
-    margin: 0 auto;
-}
-.grid-cell {
-    width: 72.5px;
-    height: 72.5px;
-    background: rgba(238, 228, 218, 0.35);
-    border-radius: 3px;
-    position: absolute;
-}
-.tile {
-    width: 72.5px;
-    height: 72.5px;
-    position: absolute;
-    border-radius: 3px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 32px;
-    font-weight: bold;
-    color: #776e65;
-    transition: transform 110ms ease-in-out, background-color 110ms;
-    z-index: 10;
-}
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-.tile-2 { background: #eee4da; }
-.tile-4 { background: #ede0c8; }
-.tile-8 { background: #f2b179; color: #f9f6f2; }
-.tile-16 { background: #f59563; color: #f9f6f2; }
-.tile-32 { background: #f67c5f; color: #f9f6f2; }
-.tile-64 { background: #f65e3b; color: #f9f6f2; }
-</style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 22px 12px;
+      background: #faf8ef;
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      touch-action: manipulation;
+    }
+
+    .game {
+      width: var(--board-size);
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      margin: 0;
+      color: #776e65;
+      font-size: clamp(48px, 14vw, 76px);
+      line-height: 0.9;
+      letter-spacing: -4px;
+    }
+
+    .scores {
+      display: flex;
+      gap: 6px;
+    }
+
+    .score-box {
+      min-width: 72px;
+      padding: 7px 10px;
+      border-radius: 6px;
+      background: #bbada0;
+      color: white;
+      text-align: center;
+      text-transform: uppercase;
+      font-size: 10px;
+      font-weight: bold;
+    }
+
+    .score {
+      display: block;
+      margin-top: 2px;
+      font-size: 22px;
+    }
+
+    .intro {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .intro p {
+      margin: 0;
+    }
+
+    button {
+      border: 0;
+      border-radius: 6px;
+      padding: 11px 14px;
+      background: #8f7a66;
+      color: white;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:active {
+      transform: scale(0.96);
+    }
+
+    .board {
+      position: relative;
+      width: var(--board-size);
+      height: var(--board-size);
+      padding: var(--gap);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--gap);
+      background: var(--board);
+      border-radius: var(--radius);
+      overflow: hidden;
+      user-select: none;
+      touch-action: none;
+    }
+
+    .cell {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius);
+      background: var(--empty);
+      font-size: clamp(22px, 8vw, 42px);
+      font-weight: bold;
+    }
+
+    .tile-2 { background: #eee4da; }
+    .tile-4 { background: #ede0c8; }
+    .tile-8 { background: #f2b179; color: #f9f6f2; }
+    .tile-16 { background: #f59563; color: #f9f6f2; }
+    .tile-32 { background: #f67c5f; color: #f9f6f2; }
+    .tile-64 { background: #f65e3b; color: #f9f6f2; }
+    .tile-128 { background: #edcf72; color: #f9f6f2; font-size: clamp(18px, 6vw, 36px); }
+    .tile-256 { background: #edcc61; color: #f9f6f2; font-size: clamp(18px, 6vw, 36px); }
+    .tile-512 { background: #edc850; color: #f9f6f2; font-size: clamp(18px, 6vw, 36px); }
+    .tile-1024,
+    .tile-2048 {
+      background: #edc53f;
+      color: #f9f6f2;
+      font-size: clamp(15px, 5vw, 30px);
+    }
+
+    .message {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      background: rgba(238, 228, 218, 0.82);
+      text-align: center;
+    }
+
+    .message.show {
+      display: flex;
+    }
+
+    .message h2 {
+      margin: 0;
+      color: #776e65;
+      font-size: 38px;
+    }
+
+    .message p {
+      margin: 0;
+      font-weight: bold;
+    }
+
+    footer {
+      margin-top: 18px;
+      text-align: center;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 380px) {
+      body {
+        padding-top: 14px;
+      }
+
+      .score-box {
+        min-width: 62px;
+        padding-inline: 6px;
+      }
+
+      .intro {
+        font-size: 13px;
+      }
+
+      button {
+        padding: 10px;
+      }
+    }
+  </style>
 </head>
+
 <body>
+  <main class="game">
+    <header>
+      <h1>2048</h1>
 
-<div id="main-screen">
-    <h1 style="color: #776e65; font-size: 70px; margin: 0;">2048</h1>
-    <button class="btn" onclick="startGame()">Play Game</button>
-    <p class="instruction-text">Use Arrow Keys to Move</p>
-    <div class="volume-box">Volume Control<br><input type="range" min="0" max="1" step="0.1" value="0.5"></div>
-</div>
+      <div class="scores">
+        <div class="score-box">
+          Score
+          <span id="score" class="score">0</span>
+        </div>
 
-<div id="game-screen">
-    <div id="score">Score: <span id="score-val">0</span></div>
-    <div id="game-container">
-        <script>
-            for(let i=0; i<16; i++) {
-                let r = Math.floor(i/4), c = i%4;
-                document.write(`<div class="grid-cell" style="top:${10+r*77.5}px; left:${10+c*77.5}px"></div>`);
-            }
-        </script>
-    </div>
-    <button class="btn" style="padding: 8px 15px; font-size: 14px;" onclick="location.reload()">Quit</button>
-</div>
+        <div class="score-box">
+          Best
+          <span id="best" class="score">0</span>
+        </div>
+      </div>
+    </header>
 
-<script>
-let board = Array(4).fill().map(() => Array(4).fill(0));
-let score = 0;
-let tiles = [];
+    <section class="intro">
+      <p>Join the numbers and get to <strong>2048!</strong></p>
+      <button id="newGame">New Game</button>
+    </section>
 
-function startGame() {
-    document.getElementById('main-screen').style.display = 'none';
-    document.getElementById('game-screen').style.display = 'block';
-    addTile();
-    addTile();
-    render();
-}
+    <section id="board" class="board" aria-label="2048 game board">
+      <div id="message" class="message">
+        <h2 id="messageTitle">Game Over!</h2>
+        <p id="messageText">No more moves available.</p>
+        <button id="tryAgain">Try Again</button>
+      </div>
+    </section>
 
-function addTile() {
-    let empty = [];
-    board.forEach((r, i) => r.forEach((v, j) => {
-        if(!v) empty.push([i, j]);
-    }));
-    if(empty.length) {
-        let [r, c] = empty[Math.floor(Math.random() * empty.length)];
-        board[r][c] = Math.random() < 0.9 ? 2 : 4;
+    <footer>
+      Use your <strong>arrow keys</strong> or <strong>swipe</strong> to move the tiles.
+    </footer>
+  </main>
+
+  <script>
+    const boardElement = document.getElementById("board");
+    const scoreElement = document.getElementById("score");
+    const bestElement = document.getElementById("best");
+    const messageElement = document.getElementById("message");
+    const messageTitle = document.getElementById("messageTitle");
+    const messageText = document.getElementById("messageText");
+
+    const SIZE = 4;
+    let board = [];
+    let score = 0;
+    let best = Number(localStorage.getItem("best2048") || 0);
+    let won = false;
+    let gameOver = false;
+    let startX = 0;
+    let startY = 0;
+
+    bestElement.textContent = best;
+
+    function emptyBoard() {
+      return Array.from({ length: SIZE }, () => Array(SIZE).fill(0));
     }
-}
 
-function render() {
-    const container = document.getElementById('game-container');
-    document.querySelectorAll('.tile').forEach(t => t.remove());
-    board.forEach((row, r) => row.forEach((v, c) => {
-        if(v) {
-            const t = document.createElement('div');
-            t.className = `tile tile-${v}`;
-            t.innerText = v;
-            t.style.top = (10 + r * 77.5) + 'px';
-            t.style.left = (10 + c * 77.5) + 'px';
-            container.appendChild(t);
+    function startGame() {
+      board = emptyBoard();
+      score = 0;
+      won = false;
+      gameOver = false;
+      hideMessage();
+      addRandomTile();
+      addRandomTile();
+      update();
+    }
+
+    function addRandomTile() {
+      const empty = [];
+
+      for (let row = 0; row < SIZE; row++) {
+        for (let col = 0; col < SIZE; col++) {
+          if (board[row][col] === 0) {
+            empty.push({ row, col });
+          }
         }
-    }));
-    document.getElementById('score-val').innerText = score;
-}
+      }
 
-function slide(row) {
-    let arr = row.filter(v => v);
-    for (let i = 0; i < arr.length - 1; i++) {
-        if (arr[i] === arr[i+1]) {
-            arr[i] *= 2;
-            score += arr[i];
-            arr[i+1] = 0;
+      if (!empty.length) return;
+
+      const spot = empty[Math.floor(Math.random() * empty.length)];
+      board[spot.row][spot.col] = Math.random() < 0.9 ? 2 : 4;
+    }
+
+    function update() {
+      boardElement.querySelectorAll(".cell").forEach(cell => cell.remove());
+
+      for (let row = 0; row < SIZE; row++) {
+        for (let col = 0; col < SIZE; col++) {
+          const cell = document.createElement("div");
+          const value = board[row][col];
+
+          cell.className = "cell";
+          if (value) {
+            cell.classList.add(`tile-${value}`);
+            cell.textContent = value;
+          }
+
+          boardElement.appendChild(cell);
         }
-    }
-    arr = arr.filter(v => v);
-    while (arr.length < 4) arr.push(0);
-    return arr;
-}
+      }
 
-window.addEventListener('keydown', e => {
-    if (document.getElementById('game-screen').style.display === 'none') return;
-    if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.code)) e.preventDefault();
-    let old = JSON.stringify(board);
-    
-    if (e.key === 'ArrowLeft') board = board.map(r => slide(r));
-    if (e.key === 'ArrowRight') board = board.map(r => slide(r.reverse()).reverse());
-    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-        board = board.map((_, i) => board.map(r => r[i]));
-        if (e.key === 'ArrowUp') board = board.map(r => slide(r));
-        else board = board.map(r => slide(r.reverse()).reverse());
-        board = board.map((_, i) => board.map(r => r[i]));
+      scoreElement.textContent = score;
+
+      if (score > best) {
+        best = score;
+        bestElement.textContent = best;
+        localStorage.setItem("best2048", best);
+      }
     }
-    
-    if (old !== JSON.stringify(board)) {
-        addTile();
-        render();
+
+    function slideLine(line) {
+      const values = line.filter(value => value !== 0);
+      const result = [];
+      let gained = 0;
+
+      for (let i = 0; i < values.length; i++) {
+        if (values[i] === values[i + 1]) {
+          const merged = values[i] * 2;
+          result.push(merged);
+          gained += merged;
+          i++;
+        } else {
+          result.push(values[i]);
+        }
+      }
+
+      while (result.length < SIZE) result.push(0);
+
+      return { line: result, gained };
     }
-});
-</script>
+
+    function move(direction) {
+      if (gameOver) return;
+
+      const oldBoard = JSON.stringify(board);
+      let gained = 0;
+
+      if (direction === "left" || direction === "right") {
+        for (let row = 0; row < SIZE; row++) {
+          let line = [...board[row]];
+
+          if (direction === "right") line.reverse();
+
+          const result = slideLine(line);
+          line = result.line;
+          gained += result.gained;
+
+          if (direction === "right") line.reverse();
+
+          board[row] = line;
+        }
+      } else {
+        for (let col = 0; col < SIZE; col++) {
+          let line = [];
+
+          for (let row = 0; row < SIZE; row++) {
+            line.push(board[row][col]);
+          }
+
+          if (direction === "down") line.reverse();
+
+          const result = slideLine(line);
+          line = result.line;
+          gained += result.gained;
+
+          if (direction === "down") line.reverse();
+
+          for (let row = 0; row < SIZE; row++) {
+            board[row][col] = line[row];
+          }
+        }
+      }
+
+      if (JSON.stringify(board) === oldBoard) return;
+
+      score += gained;
+      addRandomTile();
+      update();
+
+      if (!won && board.flat().includes(2048)) {
+        won = true;
+        showMessage("You Win!", "You reached 2048!");
+      } else if (!canMove()) {
+        gameOver = true;
+        showMessage("Game Over!", "No more moves available.");
+      }
+    }
+
+    function canMove() {
+      for (let row = 0; row < SIZE; row++) {
+        for (let col = 0; col < SIZE; col++) {
+          if (board[row][col] === 0) return true;
+
+          if (
+            col < SIZE - 1 &&
+            board[row][col] === board[row][col + 1]
+          ) {
+            return true;
+          }
+
+          if (
+            row < SIZE - 1 &&
+            board[row][col] === board[row + 1][col]
+          ) {
+            return true;
+          }
+        }
+      }
+
+      return false;
+    }
+
+    function showMessage(title, text) {
+      messageTitle.textContent = title;
+      messageText.textContent = text;
+      messageElement.classList.add("show");
+    }
+
+    function hideMessage() {
+      messageElement.classList.remove("show");
+    }
+
+    document.addEventListener("keydown", event => {
+      const keys = {
+        ArrowLeft: "left",
+        ArrowRight: "right",
+        ArrowUp: "up",
+        ArrowDown: "down"
+      };
+
+      if (keys[event.key]) {
+        event.preventDefault();
+        move(keys[event.key]);
+      }
+    });
+
+    boardElement.addEventListener("touchstart", event => {
+      const touch = event.changedTouches[0];
+      startX = touch.clientX;
+      startY = touch.clientY;
+    }, { passive: true });
+
+    boardElement.addEventListener("touchend", event => {
+      const touch = event.changedTouches[0];
+      const distanceX = touch.clientX - startX;
+      const distanceY = touch.clientY - startY;
+
+      if (Math.max(Math.abs(distanceX), Math.abs(distanceY)) < 30) return;
+
+      if (Math.abs(distanceX) > Math.abs(distanceY)) {
+        move(distanceX > 0 ? "right" : "left");
+      } else {
+        move(distanceY > 0 ? "down" : "up");
+      }
+    }, { passive: true });
+
+    document.getElementById("newGame").addEventListener("click", startGame);
+    document.getElementById("tryAgain").addEventListener("click", startGame);
+
+    startGame();
+  </script>
 </body>
 </html>
